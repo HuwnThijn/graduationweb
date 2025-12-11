@@ -1,5 +1,4 @@
 const express = require('express');
-const nodemailer = require('nodemailer');
 const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
@@ -12,46 +11,34 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
-// Email transporter configuration
-// Hỗ trợ cả Gmail SMTP và Resend API
-let transporter;
-
-if (process.env.RESEND_API_KEY) {
-    // Sử dụng Resend (khuyên dùng cho Render.com)
-    transporter = nodemailer.createTransport({
-        host: 'smtp.resend.com',
-        port: 465,
-        secure: true,
-        auth: {
-            user: 'resend',
-            pass: process.env.RESEND_API_KEY
-        }
-    });
-    console.log('📧 Sử dụng Resend SMTP');
-} else {
-    // Fallback về Gmail SMTP (chỉ hoạt động local hoặc paid hosting)
-    transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 465,
-        secure: true,
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS
+// Hàm gửi email qua Resend HTTP API (hoạt động trên Render.com)
+async function sendEmailViaResend(to, subject, html) {
+    const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+            'Content-Type': 'application/json'
         },
-        connectionTimeout: 10000,
-        greetingTimeout: 10000,
-        socketTimeout: 15000,
+        body: JSON.stringify({
+            from: process.env.FROM_EMAIL || 'Lễ Tốt Nghiệp 2025 <onboarding@resend.dev>',
+            to: [to],
+            subject: subject,
+            html: html
+        })
     });
-    console.log('📧 Sử dụng Gmail SMTP');
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+        throw new Error(data.message || 'Failed to send email via Resend');
+    }
+    
+    return data;
 }
 
 // Xác định email gửi đi
 const getFromEmail = () => {
-    if (process.env.RESEND_API_KEY) {
-        // Resend yêu cầu domain đã verify hoặc dùng onboarding@resend.dev
-        return process.env.FROM_EMAIL || 'Lễ Tốt Nghiệp 2025 <onboarding@resend.dev>';
-    }
-    return `"Lễ Tốt Nghiệp 2025" <${process.env.EMAIL_USER}>`;
+    return process.env.FROM_EMAIL || 'Lễ Tốt Nghiệp 2025 <onboarding@resend.dev>';
 };
 
 // API endpoint to send confirmation email
@@ -79,65 +66,118 @@ app.post('/api/send-email', async (req, res) => {
             <head>
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Great+Vibes&family=Josefin+Sans:wght@300;400&display=swap" rel="stylesheet">
             </head>
-            <body style="margin: 0; padding: 40px 20px; background-color: #0a0a0a; font-family: 'Cormorant Garamond', Georgia, serif;">
-                <div style="max-width: 550px; margin: 0 auto; background-color: #0d0d0d; border: 1px solid rgba(201, 169, 98, 0.3); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5); position: relative; padding: 50px 40px;">
-                    
-                    <!-- Top decorative line -->
-                    <div style="position: absolute; top: 25px; left: 25px; width: 50px; height: 2px; background: linear-gradient(90deg, #c9a962, transparent);"></div>
-                    <div style="position: absolute; top: 25px; right: 25px; width: 50px; height: 2px; background: linear-gradient(90deg, transparent, #c9a962);"></div>
-                    
-                    <!-- Header -->
-                    <div style="text-align: center; margin-bottom: 30px;">
-                        <p style="font-family: 'Josefin Sans', Arial, sans-serif; font-size: 11px; letter-spacing: 4px; color: #b8b8b8; margin: 0 0 20px 0; font-weight: 300;">X Á C &nbsp; N H Ậ N &nbsp; T H A M &nbsp; D Ự</p>
-                        <h1 style="font-family: 'Great Vibes', cursive; font-size: 48px; color: #c9a962; margin: 0; font-weight: 400;">Graduation</h1>
-                        <p style="font-family: 'Josefin Sans', Arial, sans-serif; font-size: 18px; letter-spacing: 8px; color: #ffffff; margin: 10px 0 0 0; font-weight: 300;">LỄ TỐT NGHIỆP</p>
-                    </div>
-                    
-                    <!-- Divider -->
-                    <div style="width: 40px; height: 2px; background: linear-gradient(90deg, transparent, #c9a962, transparent); margin: 25px auto;"></div>
-                    
-                    <!-- Content -->
-                    <div style="text-align: center; color: #d4d4d4; font-size: 16px; line-height: 1.8;">
-                        <p style="margin: 0 0 15px 0;">Kính gửi <span style="color: #c9a962; font-weight: 500;">${guestName}</span>,</p>
-                        <p style="margin: 0;">Cảm ơn bạn đã xác nhận tham dự Lễ Tốt Nghiệp của tôi!</p>
-                    </div>
-                    
-                    <!-- Event Info Box -->
-                    <div style="background: rgba(201, 169, 98, 0.08); border: 1px solid rgba(201, 169, 98, 0.2); padding: 25px 30px; margin: 30px 0; text-align: left;">
-                        <p style="font-family: 'Josefin Sans', Arial, sans-serif; font-size: 13px; color: #e8e8e8; margin: 0 0 12px 0; letter-spacing: 1px;">
-                            <span style="color: #c9a962;">◈</span>&nbsp;&nbsp;<strong style="color: #c9a962;">Thời gian:</strong> Thứ Sáu, ngày 09/01/2026, lúc 9:00 sáng
-                        </p>
-                        <p style="font-family: 'Josefin Sans', Arial, sans-serif; font-size: 13px; color: #e8e8e8; margin: 0 0 12px 0; letter-spacing: 1px;">
-                            <span style="color: #c9a962;">◈</span>&nbsp;&nbsp;<strong style="color: #c9a962;">Địa điểm:</strong> Thu Duc Campus - HUTECH
-                        </p>
-                        <p style="font-family: 'Josefin Sans', Arial, sans-serif; font-size: 13px; color: #e8e8e8; margin: 0; letter-spacing: 1px;">
-                            <span style="color: #c9a962;">◈</span>&nbsp;&nbsp;<strong style="color: #c9a962;">Địa chỉ:</strong> Phân khu đào tạo E1, Khu Công Nghệ cao TP.HCM
-                        </p>
-                    </div>
-                    
-                    <!-- Note -->
-                    <div style="text-align: center; color: #b8b8b8; font-size: 14px; line-height: 1.8; font-style: italic;">
-                        <p style="margin: 0;">Vui lòng đến trước 15 phút để check-in.</p>
-                        <p style="margin: 10px 0 0 0;">Tôi rất mong được đón tiếp bạn!</p>
-                    </div>
-                    
-                    <!-- Divider -->
-                    <div style="width: 40px; height: 2px; background: linear-gradient(90deg, transparent, #c9a962, transparent); margin: 30px auto;"></div>
-                    
-                    <!-- Footer -->
-                    <div style="text-align: center;">
-                        <p style="font-family: 'Josefin Sans', Arial, sans-serif; font-size: 12px; letter-spacing: 2px; color: #888; margin: 0 0 10px 0;">Trân trọng,</p>
-                        <p style="font-family: 'Great Vibes', cursive; font-size: 32px; color: #ffffff; margin: 0;">Thái Hưng Thịnh</p>
-                        <p style="font-family: 'Josefin Sans', Arial, sans-serif; font-size: 11px; letter-spacing: 3px; color: #c9a962; margin: 15px 0 5px 0;">KHÓA 2021 - 2025</p>
-                        <p style="font-family: 'Josefin Sans', Arial, sans-serif; font-size: 11px; letter-spacing: 2px; color: #c9a962; margin: 0;">TRƯỜNG ĐẠI HỌC CÔNG NGHỆ TP.HCM (HUTECH)</p>
-                    </div>
-                    
-                    <!-- Bottom decorative line -->
-                    <div style="position: absolute; bottom: 25px; left: 25px; width: 50px; height: 2px; background: linear-gradient(90deg, #c9a962, transparent);"></div>
-                    <div style="position: absolute; bottom: 25px; right: 25px; width: 50px; height: 2px; background: linear-gradient(90deg, transparent, #c9a962);"></div>
-                </div>
+            <body style="margin: 0; padding: 40px 20px; background-color: #0a0a0a; font-family: Georgia, serif;">
+                <table cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width: 550px; margin: 0 auto;">
+                    <tr>
+                        <td style="background-color: #0d0d0d; border: 1px solid rgba(201, 169, 98, 0.3); padding: 0;">
+                            
+                            <!-- Top decorative line -->
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                                <tr>
+                                    <td style="padding: 20px 25px 0 25px;">
+                                        <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                                            <tr>
+                                                <td width="50" style="height: 2px; background: linear-gradient(90deg, #c9a962, transparent);"></td>
+                                                <td></td>
+                                                <td width="50" style="height: 2px; background: linear-gradient(90deg, transparent, #c9a962);"></td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- Main Content -->
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                                <tr>
+                                    <td style="padding: 40px 40px 30px 40px; text-align: center;">
+                                        
+                                        <!-- Header -->
+                                        <p style="font-family: Arial, sans-serif; font-size: 11px; letter-spacing: 4px; color: #b8b8b8; margin: 0 0 20px 0;">X Á C &nbsp; N H Ậ N &nbsp; T H A M &nbsp; D Ự</p>
+                                        <h1 style="font-family: 'Brush Script MT', cursive; font-size: 52px; color: #c9a962; margin: 0; font-weight: normal;">Graduation</h1>
+                                        <p style="font-family: Arial, sans-serif; font-size: 18px; letter-spacing: 8px; color: #ffffff; margin: 10px 0 0 0;">LỄ TỐT NGHIỆP</p>
+                                        
+                                        <!-- Divider -->
+                                        <table cellpadding="0" cellspacing="0" border="0" style="margin: 25px auto;">
+                                            <tr>
+                                                <td style="width: 40px; height: 2px; background: linear-gradient(90deg, transparent, #c9a962, transparent);"></td>
+                                            </tr>
+                                        </table>
+                                        
+                                        <!-- Content -->
+                                        <p style="color: #d4d4d4; font-size: 16px; line-height: 1.8; margin: 0 0 15px 0;">Kính gửi <span style="color: #c9a962; font-weight: bold;">${guestName}</span>,</p>
+                                        <p style="color: #d4d4d4; font-size: 16px; line-height: 1.8; margin: 0;">Cảm ơn bạn đã xác nhận tham dự Lễ Tốt Nghiệp của tôi!</p>
+                                        
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- Event Info Box -->
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                                <tr>
+                                    <td style="padding: 0 40px;">
+                                        <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background: rgba(201, 169, 98, 0.1); border: 1px solid rgba(201, 169, 98, 0.25);">
+                                            <tr>
+                                                <td style="padding: 25px 30px;">
+                                                    <p style="font-family: Arial, sans-serif; font-size: 14px; color: #e8e8e8; margin: 0 0 12px 0;">
+                                                        <span style="color: #c9a962;">◆</span>&nbsp;&nbsp;<strong style="color: #c9a962;">Thời gian:</strong> Thứ Sáu, ngày 09/01/2026, lúc 9:00 sáng
+                                                    </p>
+                                                    <p style="font-family: Arial, sans-serif; font-size: 14px; color: #e8e8e8; margin: 0 0 12px 0;">
+                                                        <span style="color: #c9a962;">◆</span>&nbsp;&nbsp;<strong style="color: #c9a962;">Địa điểm:</strong> Thu Duc Campus - HUTECH
+                                                    </p>
+                                                    <p style="font-family: Arial, sans-serif; font-size: 14px; color: #e8e8e8; margin: 0;">
+                                                        <span style="color: #c9a962;">◆</span>&nbsp;&nbsp;<strong style="color: #c9a962;">Địa chỉ:</strong> Phân khu đào tạo E1, Khu Công Nghệ cao TP.HCM
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- Note & Footer -->
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                                <tr>
+                                    <td style="padding: 30px 40px; text-align: center;">
+                                        
+                                        <p style="color: #b8b8b8; font-size: 14px; line-height: 1.8; font-style: italic; margin: 0;">Vui lòng đến trước 15 phút để check-in.</p>
+                                        <p style="color: #b8b8b8; font-size: 14px; line-height: 1.8; font-style: italic; margin: 10px 0 0 0;">Tôi rất mong được đón tiếp bạn!</p>
+                                        
+                                        <!-- Divider -->
+                                        <table cellpadding="0" cellspacing="0" border="0" style="margin: 30px auto;">
+                                            <tr>
+                                                <td style="width: 40px; height: 2px; background: linear-gradient(90deg, transparent, #c9a962, transparent);"></td>
+                                            </tr>
+                                        </table>
+                                        
+                                        <!-- Signature -->
+                                        <p style="font-family: Arial, sans-serif; font-size: 12px; letter-spacing: 2px; color: #888; margin: 0 0 10px 0;">Trân trọng,</p>
+                                        <p style="font-family: 'Brush Script MT', cursive; font-size: 36px; color: #ffffff; margin: 0;">Thái Hưng Thịnh</p>
+                                        <p style="font-family: Arial, sans-serif; font-size: 11px; letter-spacing: 3px; color: #c9a962; margin: 15px 0 5px 0;">KHÓA 2021 - 2025</p>
+                                        <p style="font-family: Arial, sans-serif; font-size: 11px; letter-spacing: 2px; color: #c9a962; margin: 0;">TRƯỜNG ĐẠI HỌC CÔNG NGHỆ TP.HCM (HUTECH)</p>
+                                        
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- Bottom decorative line -->
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                                <tr>
+                                    <td style="padding: 0 25px 20px 25px;">
+                                        <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                                            <tr>
+                                                <td width="50" style="height: 2px; background: linear-gradient(90deg, #c9a962, transparent);"></td>
+                                                <td></td>
+                                                <td width="50" style="height: 2px; background: linear-gradient(90deg, transparent, #c9a962);"></td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                        </td>
+                    </tr>
+                </table>
                 
                 <!-- Email footer -->
                 <p style="text-align: center; color: #555; font-size: 12px; margin-top: 30px; font-family: Arial, sans-serif;">Email này được gửi tự động từ hệ thống RSVP</p>
@@ -200,9 +240,18 @@ app.post('/api/send-email', async (req, res) => {
     };
     
     try {
-        // Send both emails
-        await transporter.sendMail(guestMailOptions);
-        await transporter.sendMail(organizerMailOptions);
+        // Send emails via Resend HTTP API
+        await sendEmailViaResend(
+            guestEmail,
+            guestMailOptions.subject,
+            guestMailOptions.html
+        );
+        
+        await sendEmailViaResend(
+            process.env.ORGANIZER_EMAIL || 'hthin217@gmail.com',
+            organizerMailOptions.subject,
+            organizerMailOptions.html
+        );
         
         console.log(`✅ Emails sent successfully to ${guestEmail}`);
         
@@ -228,5 +277,5 @@ app.get('/', (req, res) => {
 // Start server
 app.listen(PORT, () => {
     console.log(`🚀 Server đang chạy tại http://localhost:${PORT}`);
-    console.log(`📧 Email service: ${process.env.EMAIL_USER ? 'Đã cấu hình' : 'Chưa cấu hình'}`);
+    console.log(`📧 Email service: Resend HTTP API`);
 });
