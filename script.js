@@ -49,7 +49,6 @@ async function submitRSVP(event) {
         guestName: document.getElementById('guestName').value,
         guestEmail: document.getElementById('guestEmail').value,
         guestPhone: document.getElementById('guestPhone').value,
-        numGuests: document.getElementById('numGuests').value,
         message: document.getElementById('message').value
     };
     
