@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thiệp Mời Lễ Tốt Nghiệp</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Great+Vibes&family=Josefin+Sans:wght@300;400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="invitation-container">
+        <!-- Decorative Gold Lines -->
+        <div class="gold-line left-line"></div>
+        <div class="gold-line right-line"></div>
+        
+        <div class="invitation-content">
+            <p class="intro-text">T r â n  &nbsp; t r ọ n g  &nbsp; k í n h  &nbsp; m ờ i</p>
+            
+            <h1 class="graduation-text">Graduation</h1>
+            <h2 class="party-text">LỄ TỐT NGHIỆP</h2>
+            
+            <p class="honor-text">CỦA</p>
+            
+            <p class="name-text">Thái Hưng Thịnh</p>
+            
+            <div class="event-details">
+                <p class="detail-line">Thứ Sáu, ngày 09 tháng 01, 2026</p>
+                <p class="detail-line">lúc 9 giờ sáng</p>
+                <p class="detail-line venue">TẠI THU DUC CAMPUS</p>
+                <p class="detail-line">Trường Đại học Công Nghệ TP.HCM (HUTECH)</p>
+                <p class="detail-line">Phân khu đào tạo E1, Khu Công Nghệ cao TP.HCM, Phường Tăng Nhơn Phú, TP.HCM</p>
+            </div>
+            
+            <div class="divider"></div>
+            
+            <p class="class-info">KHÓA 2021 - 2025</p>
+            <p class="school-info">TRƯỜNG ĐẠI HỌC CÔNG NGHỆ TP.HCM (HUTECH)</p>
+            
+            <!-- RSVP Button -->
+            <button class="rsvp-button" onclick="openRSVPModal()">
+                XÁC NHẬN THAM GIA
+            </button>
+        </div>
+    </div>
+    
+    <!-- RSVP Modal -->
+    <div id="rsvpModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeRSVPModal()">&times;</span>
+            <h2 class="modal-title">Xác Nhận Tham Gia</h2>
+            <p class="modal-subtitle">Vui lòng điền thông tin của bạn</p>
+            
+            <form id="rsvpForm" onsubmit="submitRSVP(event)">
+                <div class="form-group">
+                    <label for="guestName">Họ và tên *</label>
+                    <input type="text" id="guestName" name="guestName" required placeholder="Nhập họ và tên">
+                </div>
+                
+                <div class="form-group">
+                    <label for="guestEmail">Email *</label>
+                    <input type="email" id="guestEmail" name="guestEmail" required placeholder="Nhập email của bạn">
+                </div>
+                
+                <div class="form-group">
+                    <label for="guestPhone">Số điện thoại</label>
+                    <input type="tel" id="guestPhone" name="guestPhone" placeholder="Nhập số điện thoại">
+                </div>
+                
+                <div class="form-group">
+                    <label for="numGuests">Số người tham dự</label>
+                    <select id="numGuests" name="numGuests">
+                        <option value="1">1 người</option>
+                        <option value="2">2 người</option>
+                        <option value="3">3 người</option>
+                        <option value="4">4 người</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="message">Lời nhắn</label>
+                    <textarea id="message" name="message" rows="3" placeholder="Gửi lời chúc mừng..."></textarea>
+                </div>
+                
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    <span id="btnText">GỬI XÁC NHẬN</span>
+                    <span id="btnLoader" class="loader hidden"></span>
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Success Modal -->
+    <div id="successModal" class="modal">
+        <div class="modal-content success-modal">
+            <div class="success-icon">✓</div>
+            <h2 class="modal-title">Cảm ơn bạn!</h2>
+            <p class="success-message">Xác nhận của bạn đã được ghi nhận.<br>Email xác nhận đã được gửi đến hộp thư của bạn.</p>
+            <button class="submit-btn" onclick="closeSuccessModal()">ĐÓNG</button>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
