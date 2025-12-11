@@ -384,35 +384,246 @@ body {
 }
 
 /* Responsive Design */
-@media (max-width: 600px) {
+
+/* Tablet */
+@media (max-width: 768px) {
+    body {
+        padding: 15px;
+    }
+    
     .invitation-container {
-        padding: 40px 30px;
+        padding: 50px 40px;
+        min-height: auto;
+    }
+    
+    .graduation-text {
+        font-size: 60px;
+    }
+    
+    .party-text {
+        font-size: 40px;
+        letter-spacing: 10px;
+    }
+    
+    .name-text {
+        font-size: 46px;
+    }
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+    body {
+        padding: 10px;
+    }
+    
+    .invitation-container {
+        padding: 40px 25px;
         min-height: auto;
     }
     
     .gold-line.left-line {
-        left: 15px;
+        left: 12px;
     }
     
     .gold-line.right-line {
-        right: 15px;
+        right: 12px;
+    }
+    
+    .gold-line {
+        width: 2px;
+    }
+    
+    .invitation-content {
+        padding: 0 10px;
+    }
+    
+    .intro-text {
+        font-size: 11px;
+        letter-spacing: 2px;
+        margin-bottom: 20px;
     }
     
     .graduation-text {
-        font-size: 52px;
+        font-size: 48px;
+        padding-bottom: 20px;
     }
     
     .party-text {
-        font-size: 32px;
-        letter-spacing: 8px;
+        font-size: 28px;
+        letter-spacing: 6px;
+        margin-bottom: 15px;
+    }
+    
+    .honor-text {
+        font-size: 12px;
+        letter-spacing: 4px;
     }
     
     .name-text {
-        font-size: 38px;
+        font-size: 36px;
+        margin-bottom: 25px;
+    }
+    
+    .detail-line {
+        font-size: 12px;
+        letter-spacing: 1px;
+        margin-bottom: 6px;
+    }
+    
+    .detail-line.venue {
+        letter-spacing: 2px;
+        margin-top: 12px;
+    }
+    
+    .divider {
+        margin: 20px auto;
+    }
+    
+    .class-info {
+        font-size: 12px;
+        letter-spacing: 3px;
+    }
+    
+    .school-info {
+        font-size: 13px;
+        letter-spacing: 3px;
+        margin-bottom: 30px;
+    }
+    
+    .rsvp-button {
+        font-size: 12px;
+        letter-spacing: 2px;
+        padding: 12px 30px;
+        margin-top: 15px;
     }
     
     .modal-content {
-        padding: 40px 25px;
+        padding: 35px 20px;
+        margin: 10px;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    
+    .modal-title {
+        font-size: 26px;
+    }
+    
+    .modal-subtitle {
+        font-size: 12px;
+        margin-bottom: 25px;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        font-size: 11px;
+        letter-spacing: 1px;
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        padding: 12px 14px;
+        font-size: 14px;
+    }
+    
+    .submit-btn {
+        padding: 14px;
+        font-size: 12px;
+        letter-spacing: 2px;
+    }
+    
+    .success-icon {
+        width: 60px;
+        height: 60px;
+        font-size: 30px;
+    }
+    
+    .success-message {
+        font-size: 16px;
+    }
+    
+    /* Decorative elements */
+    .invitation-container::before,
+    .invitation-container::after {
+        width: 40px;
+        height: 2px;
+    }
+    
+    .invitation-container::before {
+        top: 30px;
+        left: 12px;
+    }
+    
+    .invitation-container::after {
+        bottom: 30px;
+        right: 12px;
+    }
+}
+
+/* Extra small phones */
+@media (max-width: 380px) {
+    .invitation-container {
+        padding: 30px 20px;
+    }
+    
+    .gold-line.left-line {
+        left: 8px;
+    }
+    
+    .gold-line.right-line {
+        right: 8px;
+    }
+    
+    .intro-text {
+        font-size: 10px;
+        letter-spacing: 1px;
+    }
+    
+    .graduation-text {
+        font-size: 40px;
+    }
+    
+    .party-text {
+        font-size: 24px;
+        letter-spacing: 4px;
+    }
+    
+    .name-text {
+        font-size: 30px;
+    }
+    
+    .detail-line {
+        font-size: 11px;
+    }
+    
+    .class-info,
+    .school-info {
+        font-size: 11px;
+        letter-spacing: 2px;
+    }
+    
+    .rsvp-button {
+        padding: 10px 25px;
+        font-size: 11px;
+    }
+    
+    .modal-content {
+        padding: 30px 15px;
+    }
+    
+    .modal-title {
+        font-size: 22px;
+    }
+    
+    .invitation-container::before {
+        left: 8px;
+    }
+    
+    .invitation-container::after {
+        right: 8px;
     }
 }
 
