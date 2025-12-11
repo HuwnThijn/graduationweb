@@ -13,13 +13,46 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
 // Email transporter configuration
-const transporter = nodemailer.createTransport({
-    service: 'gmail', // hoặc 'outlook', 'yahoo', etc.
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS // Sử dụng App Password nếu dùng Gmail
+// Hỗ trợ cả Gmail SMTP và Resend API
+let transporter;
+
+if (process.env.RESEND_API_KEY) {
+    // Sử dụng Resend (khuyên dùng cho Render.com)
+    transporter = nodemailer.createTransport({
+        host: 'smtp.resend.com',
+        port: 465,
+        secure: true,
+        auth: {
+            user: 'resend',
+            pass: process.env.RESEND_API_KEY
+        }
+    });
+    console.log('📧 Sử dụng Resend SMTP');
+} else {
+    // Fallback về Gmail SMTP (chỉ hoạt động local hoặc paid hosting)
+    transporter = nodemailer.createTransport({
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true,
+        auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS
+        },
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 15000,
+    });
+    console.log('📧 Sử dụng Gmail SMTP');
+}
+
+// Xác định email gửi đi
+const getFromEmail = () => {
+    if (process.env.RESEND_API_KEY) {
+        // Resend yêu cầu domain đã verify hoặc dùng onboarding@resend.dev
+        return process.env.FROM_EMAIL || 'Lễ Tốt Nghiệp 2025 <onboarding@resend.dev>';
     }
-});
+    return `"Lễ Tốt Nghiệp 2025" <${process.env.EMAIL_USER}>`;
+};
 
 // API endpoint to send confirmation email
 app.post('/api/send-email', async (req, res) => {
@@ -33,9 +66,11 @@ app.post('/api/send-email', async (req, res) => {
         });
     }
     
+    const fromEmail = getFromEmail();
+    
     // Email to guest (confirmation)
     const guestMailOptions = {
-        from: `"Lễ Tốt Nghiệp 2025" <${process.env.EMAIL_USER}>`,
+        from: fromEmail,
         to: guestEmail,
         subject: '🎓 Xác nhận tham dự Lễ Tốt Nghiệp - Thái Hưng Thịnh',
         html: `
@@ -113,7 +148,7 @@ app.post('/api/send-email', async (req, res) => {
     
     // Email to organizer (notification)
     const organizerMailOptions = {
-        from: `"RSVP System" <${process.env.EMAIL_USER}>`,
+        from: fromEmail,
         to: process.env.ORGANIZER_EMAIL || process.env.EMAIL_USER,
         subject: `📬 Xác nhận tham dự mới từ ${guestName}`,
         html: `
