@@ -120,7 +120,7 @@ app.post('/api/send-email', async (req, res) => {
                                             <tr>
                                                 <td style="padding: 25px 30px;">
                                                     <p style="font-family: Arial, sans-serif; font-size: 14px; color: #e8e8e8; margin: 0 0 12px 0;">
-                                                        <span style="color: #c9a962;">◆</span>&nbsp;&nbsp;<strong style="color: #c9a962;">Thời gian:</strong> Thứ Sáu, ngày 09/01/2026, lúc 9:00 sáng
+                                                        <span style="color: #c9a962;">◆</span>&nbsp;&nbsp;<strong style="color: #c9a962;">Thời gian:</strong> Thứ Sáu, ngày 09/01/2026, lúc 9:30 sáng
                                                     </p>
                                                     <p style="font-family: Arial, sans-serif; font-size: 14px; color: #e8e8e8; margin: 0 0 12px 0;">
                                                         <span style="color: #c9a962;">◆</span>&nbsp;&nbsp;<strong style="color: #c9a962;">Địa điểm:</strong> Thu Duc Campus - HUTECH
