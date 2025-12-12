@@ -150,6 +150,32 @@ app.post('/api/send-email', async (req, res) => {
                                             </tr>
                                         </table>
                                         
+                                        <!-- Contact Info -->
+                                        <p style="font-family: Arial, sans-serif; font-size: 12px; letter-spacing: 2px; color: #888; margin: 0 0 15px 0;">LIÊN HỆ KHI CẦN HỖ TRỢ</p>
+                                        <table cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto;">
+                                            <tr>
+                                                <td style="padding: 8px 0;">
+                                                    <p style="font-family: Arial, sans-serif; font-size: 13px; color: #d4d4d4; margin: 0;">
+                                                        <span style="color: #c9a962;">📱</span>&nbsp;&nbsp;SĐT/Zalo: <a href="tel:0352703821" style="color: #c9a962; text-decoration: none;">0352703821</a>
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 8px 0;">
+                                                    <p style="font-family: Arial, sans-serif; font-size: 13px; color: #d4d4d4; margin: 0;">
+                                                        <span style="color: #c9a962;">💬</span>&nbsp;&nbsp;Facebook: <a href="https://www.facebook.com/hthin.2173" style="color: #c9a962; text-decoration: none;">fb.com/hthin.2173</a>
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        
+                                        <!-- Divider -->
+                                        <table cellpadding="0" cellspacing="0" border="0" style="margin: 30px auto;">
+                                            <tr>
+                                                <td style="width: 40px; height: 2px; background: linear-gradient(90deg, transparent, #c9a962, transparent);"></td>
+                                            </tr>
+                                        </table>
+                                        
                                         <!-- Signature -->
                                         <p style="font-family: Arial, sans-serif; font-size: 12px; letter-spacing: 2px; color: #888; margin: 0 0 10px 0;">Trân trọng,</p>
                                         <p style="font-family: 'Brush Script MT', cursive; font-size: 36px; color: #ffffff; margin: 0;">Thái Hưng Thịnh</p>
@@ -240,24 +266,36 @@ app.post('/api/send-email', async (req, res) => {
     };
     
     try {
-        // Send emails via Resend HTTP API
-        await sendEmailViaResend(
-            guestEmail,
-            guestMailOptions.subject,
-            guestMailOptions.html
-        );
+        // Với Resend free (chưa verify domain):
+        // - Chỉ có thể gửi đến email đã đăng ký tài khoản Resend
+        // - Gửi email cho organizer trước, nếu thành công mới gửi cho guest
         
+        const organizerEmail = process.env.ORGANIZER_EMAIL || 'hthin217@gmail.com';
+        
+        // Gửi email thông báo cho organizer (bạn)
         await sendEmailViaResend(
-            process.env.ORGANIZER_EMAIL || 'hthin217@gmail.com',
+            organizerEmail,
             organizerMailOptions.subject,
             organizerMailOptions.html
         );
+        console.log(`✅ Notification sent to organizer: ${organizerEmail}`);
         
-        console.log(`✅ Emails sent successfully to ${guestEmail}`);
+        // Thử gửi email cho guest (chỉ hoạt động nếu đã verify domain)
+        try {
+            await sendEmailViaResend(
+                guestEmail,
+                guestMailOptions.subject,
+                guestMailOptions.html
+            );
+            console.log(`✅ Confirmation sent to guest: ${guestEmail}`);
+        } catch (guestError) {
+            // Nếu gửi cho guest thất bại (do chưa verify domain), vẫn báo thành công
+            console.log(`⚠️ Could not send to guest (domain not verified): ${guestEmail}`);
+        }
         
         res.json({ 
             success: true, 
-            message: 'Xác nhận đã được gửi thành công!' 
+            message: 'Xác nhận đã được ghi nhận thành công!' 
         });
         
     } catch (error) {
