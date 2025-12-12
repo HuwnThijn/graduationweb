@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
+const { google } = require('googleapis');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -10,6 +11,84 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
+
+// ============================================
+// GOOGLE SHEETS CONFIGURATION
+// ============================================
+
+// Cấu hình Google Sheets API
+const SPREADSHEET_ID = process.env.GOOGLE_SHEET_ID; // ID của Google Sheet
+
+// Khởi tạo Google Sheets client
+async function getGoogleSheetsClient() {
+    // Sử dụng Service Account credentials từ env
+    const credentials = {
+        type: 'service_account',
+        project_id: process.env.GOOGLE_PROJECT_ID,
+        private_key_id: process.env.GOOGLE_PRIVATE_KEY_ID,
+        private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+        client_email: process.env.GOOGLE_CLIENT_EMAIL,
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        auth_uri: 'https://accounts.google.com/o/oauth2/auth',
+        token_uri: 'https://oauth2.googleapis.com/token',
+    };
+
+    const auth = new google.auth.GoogleAuth({
+        credentials,
+        scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+    });
+
+    const sheets = google.sheets({ version: 'v4', auth });
+    return sheets;
+}
+
+// Hàm lưu RSVP vào Google Sheets
+async function saveToGoogleSheets(rsvpData) {
+    if (!SPREADSHEET_ID) {
+        console.log('⚠️ Google Sheet ID not configured, skipping...');
+        return null;
+    }
+
+    try {
+        const sheets = await getGoogleSheetsClient();
+        
+        // Lấy thời gian hiện tại theo múi giờ Việt Nam
+        const timestamp = new Date().toLocaleString('vi-VN', {
+            timeZone: 'Asia/Ho_Chi_Minh',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+
+        // Dữ liệu để thêm vào sheet
+        const values = [[
+            rsvpData.guestName,
+            rsvpData.guestEmail,
+            rsvpData.guestPhone || 'Không cung cấp',
+            rsvpData.message || 'Không có',
+            timestamp
+        ]];
+
+        // Thêm dòng mới vào sheet
+        const response = await sheets.spreadsheets.values.append({
+            spreadsheetId: SPREADSHEET_ID,
+            range: 'Sheet1!A:E', // Cột A đến E
+            valueInputOption: 'USER_ENTERED',
+            requestBody: {
+                values: values
+            }
+        });
+
+        console.log(`📊 RSVP saved to Google Sheets: ${rsvpData.guestName}`);
+        return response.data.updates.updatedRows;
+    } catch (error) {
+        console.error('❌ Error saving to Google Sheets:', error.message);
+        throw error;
+    }
+}
 
 // Hàm gửi email qua Resend HTTP API (hoạt động trên Render.com)
 async function sendEmailViaResend(to, subject, html) {
@@ -272,6 +351,13 @@ app.post('/api/send-email', async (req, res) => {
         
         const organizerEmail = process.env.ORGANIZER_EMAIL || 'hthin217@gmail.com';
         
+        // ✅ Lưu RSVP vào Google Sheets
+        try {
+            await saveToGoogleSheets({ guestName, guestEmail, guestPhone, message });
+        } catch (sheetError) {
+            console.error('⚠️ Could not save to Google Sheets:', sheetError.message);
+        }
+        
         // Gửi email thông báo cho organizer (bạn)
         await sendEmailViaResend(
             organizerEmail,
@@ -295,7 +381,7 @@ app.post('/api/send-email', async (req, res) => {
         
         res.json({ 
             success: true, 
-            message: 'Xác nhận đã được ghi nhận thành công!' 
+            message: 'Xác nhận đã được ghi nhận thành công!'
         });
         
     } catch (error) {
@@ -316,4 +402,5 @@ app.get('/', (req, res) => {
 app.listen(PORT, () => {
     console.log(`🚀 Server đang chạy tại http://localhost:${PORT}`);
     console.log(`📧 Email service: Resend HTTP API`);
+    console.log(`📊 Google Sheets: ${SPREADSHEET_ID ? 'Configured' : 'Not configured'}`);
 });
